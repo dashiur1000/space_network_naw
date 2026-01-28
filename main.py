@@ -45,6 +45,14 @@ class RelayPacket(Packet):
     def __repr__(self):
         return f"RelayPacket(Relaying [{self.data}] to {self.receiver} from {self.sender})"
 
+def smart_send_packet(entities, packet, network):
+    start = entities.index(packet.sender)
+    end = entities.index(packet.receiver)
+    path = entities[start+1:end]
+    current_packet = packet
+    for proxi in reversed(path):
+        current_packet = RelayPacket(current_packet, current_packet.sender, proxi)
+    attempt_transmission(network, current_packet)
 
 
 
@@ -56,13 +64,11 @@ Sat1 = Satellite("Sat1", 100)
 Sat2 = Satellite("Sat2", 200)
 Sat3 = Satellite("Sat3", 300)
 Sat4 = Satellite("Sat2", 400)
+all_entities = [Earth, Sat1, Sat2, Sat3, Sat4]
 my_net = SpaceNetwork(level=3)
-p_final = Packet("Hello from Earth!!", Sat3, Sat4)
-p_relay_3 = RelayPacket(p_final, Sat2, Sat3)
-p_relay_2 = RelayPacket(p_relay_3, Sat1, Sat2)
-p_relay_1 = RelayPacket(p_relay_2, Earth, Sat1)
+p_final = Packet("Hello from Earth!!", Earth, Sat4)
 
 try:
-   attempt_transmission(my_net, p_relay_1)
+   smart_send_packet(all_entities, p_final, my_net)
 except BrokenConnectionError:
    print("Transmission failed")
