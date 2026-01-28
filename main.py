@@ -10,10 +10,10 @@ class Satellite(SpaceEntity):
    def receive_signal(self, packet: Packet):
         if isinstance(packet, RelayPacket):
             inner_packet = packet.data
-            print(f"Unwrapping and forwarding to {inner_packet.receiver.name}")
+            print(f"[{self.name}] Unwrapping and forwarding to {inner_packet.receiver.name}")
             attempt_transmission(my_net, inner_packet)
         else:
-            print(f"Final destination reached: {packet.data}")
+            print(f"[{self.name}] Final destination reached: {packet.data}")
 
 
 
@@ -54,12 +54,15 @@ class RelayPacket(Packet):
 Earth = Satellite("Earth", 0)
 Sat1 = Satellite("Sat1", 100)
 Sat2 = Satellite("Sat2", 200)
+Sat3 = Satellite("Sat3", 300)
+Sat4 = Satellite("Sat2", 400)
 my_net = SpaceNetwork(level=3)
-p_final = Packet("Hello from Earth!!", Sat1, Sat2)
-p_earth_to_sat1 = RelayPacket(p_final, Earth,Sat1)
-
+p_final = Packet("Hello from Earth!!", Sat3, Sat4)
+p_relay_3 = RelayPacket(p_final, Sat2, Sat3)
+p_relay_2 = RelayPacket(p_relay_3, Sat1, Sat2)
+p_relay_1 = RelayPacket(p_relay_2, Earth, Sat1)
 
 try:
-   attempt_transmission(my_net, p_earth_to_sat1)
+   attempt_transmission(my_net, p_relay_1)
 except BrokenConnectionError:
    print("Transmission failed")
